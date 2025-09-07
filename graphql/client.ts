@@ -5,8 +5,10 @@ import {
     RootQueryToProductConnectionWhereArgs,
     Product,
     ProductCategory,
+    PaColor,
     getSdk,
     RootQueryToProductCategoryConnectionWhereArgs,
+    RootQueryToPaColorConnectionWhereArgs,
     ProductIdTypeEnum,
 } from './generated';
 
@@ -91,6 +93,34 @@ export async function fetchCategories(
 
     } catch (err) {
         console.error(err || 'Failed to fetch product categories!!!');
+    }
+}
+
+export async function fetchColors(
+    pageSize: number,
+    pageLimit = 0,
+    where?: RootQueryToPaColorConnectionWhereArgs
+) {
+    try {
+        const client = getClientWithSdk();
+        let data = { allPaColor: initialConnectionResults }
+        let after = '';
+        let count = 0
+        while(data.allPaColor.pageInfo.hasNextPage && (pageLimit === 0 || count < pageLimit)) {
+        const next = await client.GetShopColors({
+            first: pageSize,
+            after,
+            where
+        });
+
+            data = deepmerge(data, next);
+            after = next.allPaColor?.pageInfo.endCursor || '';
+            count++;
+        }
+
+        return (data.allPaColor.nodes) as PaColor[];
+    } catch (err) {
+        console.error(err || 'Failed to fetch product color attributes!!!');
     }
 }
 
